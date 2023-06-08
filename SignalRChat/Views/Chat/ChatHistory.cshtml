@@ -1,0 +1,13 @@
+﻿@model List<MessageModel>
+@{
+    Layout = null;
+}
+@foreach(var n in Model)
+{
+    <button  type="button" class="accordion">@n.UserName : Тема письма - @n.Title    | @n.dateTime</button>
+
+    <div class="panel">
+       <p>@n.Body</p>
+    </div>
+    
+}   

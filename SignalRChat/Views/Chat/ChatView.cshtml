@@ -1,0 +1,135 @@
+﻿@model MessageModel
+@{
+    ViewData["Title"] = "Home Page";
+}
+ 
+    <h2 id="qwe">Личный кабинет пользователя</h2>
+    <a   class="btn btn-secondary" asp-area="" asp-controller="Authentication" asp-action="logout">Sign out</a>
+    <div id="userForm">
+        <p>
+            Введите ник получателя:<br />
+            <input class="form-control" id="username" type="text" name="Name"   />
+        </p>
+        <p>
+            Введите тему:<br />
+        <input type="text" class="form-control" id="MessageTitle" />
+        </p>
+        <p>
+            Введите сообщение:<br />
+            <input  type="text" class="form-control" id="message" />
+        </p>
+        <input type="submit" id="sendBtn" value="Отправить" />
+    </div> 
+
+   <div>
+    <partial name="ChatHistoryPartial" />
+    </div>
+
+
+    <div id="chatroom"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+
+
+   <script>
+    const hubConnection = new signalR.HubConnectionBuilder()
+        .withUrl("/chat")
+        .build();
+
+    // отправка сообщения от простого пользователя
+    document.getElementById("sendBtn").addEventListener("click", () => {
+        const MessageTitle = document.getElementById("MessageTitle").value;
+        const message = document.getElementById("message").value;
+        const username = document.getElementById("username").value;
+        hubConnection.invoke("Send", MessageTitle, message, username)
+            .catch(error => console.error(error));
+    });
+    // получение сообщения от сервера
+    hubConnection.on("Receive", (MessageTitle, message, userName) => {
+
+        // создаем элемент <b> для имени пользователя
+        const userNameElem = document.createElement("button");
+        userNameElem.className = "accordion";
+        userNameElem.textContent = `${userName}: Тема письма - ${MessageTitle}`;
+
+        userNameElem.addEventListener("click", function () {
+            this.classList.toggle("active");
+            var panel = this.nextElementSibling;
+            if (panel.style.maxHeight) {
+                panel.style.maxHeight = null;
+            } else {
+                panel.style.maxHeight = panel.scrollHeight + "px";
+            }
+        });
+
+
+        // создает элемент <p> для сообщения пользователя
+        const elem = document.createElement("div");
+        elem.className = "panel";
+        elem.innerHTML = `<p>${message}<p>` ;
+
+        document.getElementById("chatroom").appendChild(userNameElem);
+        document.getElementById("chatroom").appendChild(elem);
+
+    });
+
+    hubConnection.start()
+        .then(() => document.getElementById("sendBtn").disabled = false)
+        .catch((err) => console.error(err));
+
+    let sender;
+    // получение ника текущего пользователя
+    hubConnection.on("Notify", message => {
+        document.getElementById("qwe").innerHTML += " " + message;
+        sender = message;
+    });
+
+
+     
+
+
+
+   </script>
+
+
+    
+@*   <script>
+
+    const hubConnection = new signalR.HubConnectionBuilder()
+        .withUrl("/chat")
+        .build();
+
+    // отправка сообщения от простого пользователя
+    document.getElementById("sendBtn").addEventListener("click", () => {
+        const message = document.getElementById("message").value;
+        const username = document.getElementById("username").value;
+        hubConnection.invoke("Send", message, username)
+            .catch(error => console.error(error));
+    });
+    // получение сообщения от сервера
+    hubConnection.on("Receive", (message, userName) => {
+
+        // создаем элемент <b> для имени пользователя
+        const userNameElem = document.createElement("b");
+        userNameElem.textContent = `${userName}: `;
+
+        // создает элемент <p> для сообщения пользователя
+        const elem = document.createElement("p");
+        elem.appendChild(userNameElem);
+        elem.appendChild(document.createTextNode(message));
+
+        document.getElementById("chatroom").appendChild(elem);
+
+    });
+
+    hubConnection.start()
+        .then(() => document.getElementById("sendBtn").disabled = false)
+        .catch((err) => console.error(err));
+
+    let sender;
+    // получение ника текущего пользователя
+    hubConnection.on("Notify", message => {
+        document.getElementById("qwe").innerHTML += " " + message;
+        sender = message;
+    });
+
+   </script>*@
